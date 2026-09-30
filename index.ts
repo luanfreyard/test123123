@@ -76,7 +76,7 @@ if (!csrfToken) {
 // }
 
 const form = new FormData();
-form.append("email", "industrial.catfish@x-box.in");
+form.append("email", "tart.roundworm@x-box.in");
 form.append("password", "asdasdSAdsadAS12312!");
 form.append("accountType", "PRIVATE");
 form.append("contactName", "Dmitry Rest");
