@@ -1,1 +1,122 @@
-console.log("Hello via Bun!");
+import { CookieJar } from "tough-cookie";
+import got from "got";
+import { HttpProxyAgent } from "http-proxy-agent";
+import { HttpsProxyAgent } from "https-proxy-agent";
+
+const url = 'https://www.kleinanzeigen.de'
+const proxyUrl = 'http://uqv332m0:p4993460@faz4kdwdpn.cn.fxdx.in:16534'
+// console.log(getRandomName())
+
+
+// const response = await fetch(`${url}/m-benutzer-anmeldung.html`, {
+//   proxy: proxyUrl,
+// });
+
+// if (!response.ok) {
+//   throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+// }
+
+// const html = await response.text();
+
+// const tmxSessionId = html.match(
+//   /tmxSessionId:\s*["']([^"']+)["']/
+// )?.[1];
+
+// console.log(tmxSessionId);
+
+// //
+const jar = new CookieJar();
+
+const client = got.extend({
+  cookieJar: jar,
+  http2: false,
+  timeout: {
+    request: 30_000,
+  },
+
+  agent: {
+    http: new HttpProxyAgent(proxyUrl),
+    https: new HttpsProxyAgent(proxyUrl),
+  },
+
+  headers: {
+    "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  },
+
+  retry: {
+    limit: 0,
+  },
+});
+let response = await client.get(
+  "https://www.kleinanzeigen.de/m-benutzer-anmeldung.html",
+);
+
+let html = response.body;
+
+let tmxSessionId = html.match(
+  /tmxSessionId:\s*["']([^"']+)["']/
+)?.[1];
+
+console.log(tmxSessionId);
+
+const csrfToken = (await jar.getCookies(url))
+  .find(cookie => cookie.key === "CSRF-TOKEN")
+  ?.value;
+
+if (!csrfToken) {
+  throw new Error("CSRF-TOKEN не найден среди cookies после GET");
+}
+
+// const registrationWenkseSessionId = process.env.REGISTRATION_WENKSE_SESSION_ID;
+
+// if (!registrationWenkseSessionId) {
+//   throw new Error(
+//     "Передайте свежий REGISTRATION_WENKSE_SESSION_ID. Это не tmxSessionId.",
+//   );
+// }
+
+const fields = {
+  email: "fluffy.tyrannosaurus@xklym.com",
+  password: "asdasdSAdsadAS12312!",
+  accountType: "PRIVATE",
+  contactName: "Dmitry Rest",
+  marketingOptIn: "false",
+  registrationWenkseSessionId: `${tmxSessionId}` 
+};
+
+const boundary = `----WebKitFormBoundary${crypto.randomUUID().replaceAll("-", "")}`;
+const multipartBody = Buffer.from(
+  Object.entries(fields)
+    .map(
+      ([name, value]) =>
+        `--${boundary}\r\n` +
+        `Content-Disposition: form-data; name="${name}"\r\n\r\n` +
+        `${value}\r\n`,
+    )
+    .concat(`--${boundary}--\r\n`)
+    .join(""),
+);
+
+const test = await client.post(url + "/m-benutzer-anmeldung.html", {
+  body: multipartBody,
+  headers: {
+    accept: "application/json",
+    "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
+    "cache-control": "no-cache",
+    "content-type": `multipart/form-data; boundary=${boundary}`,
+    "content-length": String(multipartBody.byteLength),
+    origin: url,
+    pragma: "no-cache",
+    referer: url + "/m-benutzer-anmeldung.html",
+    "x-csrf-token": csrfToken,
+    "x-xsrf-token": csrfToken,
+  },
+  responseType: "text",
+});
+
+html = test.body;
+
+
+
+console.log(html);
+//
