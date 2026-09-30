@@ -29,10 +29,6 @@ const jar = new CookieJar();
 
 const client = got.extend({
   cookieJar: jar,
-  http2: false,
-  timeout: {
-    request: 30_000,
-  },
 
   agent: {
     http: new HttpProxyAgent(proxyUrl),
@@ -67,44 +63,32 @@ if (!csrfToken) {
   throw new Error("CSRF-TOKEN не найден среди cookies после GET");
 }
 
-// const registrationWenkseSessionId = process.env.REGISTRATION_WENKSE_SESSION_ID;
+// // Это НЕ tmxSessionId. Нужен отдельный registrationWenkseSessionId
+// // из предыдущего шага регистрации/ответа API.
+// const registrationWenkseSessionId = html.match(
+//   /registrationWenkseSessionId\s*[:=]\s*["']([^"']+)["']/,
+// )?.[1];
 
 // if (!registrationWenkseSessionId) {
 //   throw new Error(
-//     "Передайте свежий REGISTRATION_WENKSE_SESSION_ID. Это не tmxSessionId.",
+//     "registrationWenkseSessionId не найден. Не подставляйте вместо него tmxSessionId.",
 //   );
 // }
 
-const fields = {
-  email: "fluffy.tyrannosaurus@xklym.com",
-  password: "asdasdSAdsadAS12312!",
-  accountType: "PRIVATE",
-  contactName: "Dmitry Rest",
-  marketingOptIn: "false",
-  registrationWenkseSessionId: `${tmxSessionId}` 
-};
-
-const boundary = `----WebKitFormBoundary${crypto.randomUUID().replaceAll("-", "")}`;
-const multipartBody = Buffer.from(
-  Object.entries(fields)
-    .map(
-      ([name, value]) =>
-        `--${boundary}\r\n` +
-        `Content-Disposition: form-data; name="${name}"\r\n\r\n` +
-        `${value}\r\n`,
-    )
-    .concat(`--${boundary}--\r\n`)
-    .join(""),
-);
+const form = new FormData();
+form.append("email", "industrial.catfish@x-box.in");
+form.append("password", "asdasdSAdsadAS12312!");
+form.append("accountType", "PRIVATE");
+form.append("contactName", "Dmitry Rest");
+form.append("marketingOptIn", "false");
+form.append("registrationWenkseSessionId", `${tmxSessionId}`);
 
 const test = await client.post(url + "/m-benutzer-anmeldung.html", {
-  body: multipartBody,
+  body: form,
   headers: {
     accept: "application/json",
     "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
     "cache-control": "no-cache",
-    "content-type": `multipart/form-data; boundary=${boundary}`,
-    "content-length": String(multipartBody.byteLength),
     origin: url,
     pragma: "no-cache",
     referer: url + "/m-benutzer-anmeldung.html",
