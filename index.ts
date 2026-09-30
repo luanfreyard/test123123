@@ -4,7 +4,7 @@ import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";
 
 const url = 'https://www.kleinanzeigen.de'
-const proxyUrl = 'http://m_0e08ca9c46-country-de-region-bavaria-sid-c1106630-ttl-15m:beae2e0b86@mobile.digiproxy.cc:5000'
+const proxyUrl = 'http://afcf77dc544a-country-de-city-mosbach:0018797e-4d5a-4b37-ad00-b18c8a5b0e2c@budget.digiproxy.cc:9000'
 // console.log(getRandomName())
 
 
